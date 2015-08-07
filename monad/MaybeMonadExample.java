@@ -17,11 +17,11 @@ public class MaybeMonadExample {
         System.out.println(example.findCarInsuranceForUserMonad("ddou-no-exist"));
     }
 
-    private String findCarInsuranceForUserMonad(String ddou) {
+    private String findCarInsuranceForUserMonad(String name) {
         BiFunction<Map<String, String>, String, Maybe<String>> lookup = (map, key) -> map.containsKey(key) ? Maybe.of(map.get(key)) : Maybe.Nothing;
 
         Maybe<String> result =
-            lookup.apply(getIdentityDb(), ddou).bind(
+            lookup.apply(getIdentityDb(), name).bind(
                 id -> lookup.apply(getCarRegisterationDb(), id)).bind(
                 car -> lookup.apply(getInsuranceDb(), car));
         return result == Maybe.Nothing ? "no-exist" : result.getValue();
