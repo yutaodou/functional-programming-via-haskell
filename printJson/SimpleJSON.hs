@@ -24,7 +24,7 @@ getString _ = Nothing
 getDouble (JNumber n) = Just (truncate n)
 getDouble _ = Nothing
 
-etInt (JNumber n) = Just (truncate n)
+getInt (JNumber n) = Just (truncate n)
 getInt _ = Nothing
 
 getBool (JBool b) = Just b
