@@ -23,6 +23,12 @@ numLongChains = length (filter isLong (map chain [1..100]))
 tryFoldl = foldl (\a b -> a+b) 0 [1..10]
 tryFoldr = foldr (\a b -> a+b) 0 [1..10]
 
+add :: a -> a  -> a
+add a b = a + b
+
+perform :: a -> a  -> (a -> a -> a ) -> a
+perform a b action = action a b
+
 
 main = do
     print $ zipWith' (+) [1,2,3] [3,2,1]
@@ -30,6 +36,7 @@ main = do
     print $ lagestDivisible
     print $ sumOfOddSquare
     print $ chain 13
+    print $ sum [1..10] 
 
     print $ length (filter (>15) (map length (map chain [1..100])))
     print $ numLongChains
