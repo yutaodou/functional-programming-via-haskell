@@ -8,12 +8,13 @@ type Point = (Int, Int)
 data MarsRover = MarsRover Point Direction
     deriving (Show)
 
-execute :: MarsRover -> Command -> MarsRover
-execute rover command =
+run :: Maybe Command -> MarsRover -> MarsRover
+run command rover =
     case command of
-        L -> turnLeft rover
-        R -> turnRight rover
-        M -> move rover
+        Just L -> turnLeft rover
+        Just R -> turnRight rover
+        Just M -> move rover
+        Nothing -> rover
 
 turnLeft :: MarsRover -> MarsRover
 turnLeft rover = case rover of
@@ -38,6 +39,14 @@ move rover =
         MarsRover (x, y) W -> MarsRover (x-1, y) W
         MarsRover (x, y) S -> MarsRover (x, y-1) S
 
+parse :: Char -> Maybe  Command
+parse c = case c of
+    'L' -> Just L
+    'R' -> Just R
+    'M' -> Just M
+    _ -> Nothing
+
 main :: IO()
 main = do
-    putStrLn $ show $ move.turnLeft.move.turnRight.move $ MarsRover (0, 0) S
+    let execute = foldl (.) id $ map run $ map parse "LMRMM"
+    putStrLn $ show $ execute $ MarsRover (0, 0) S
