@@ -46,7 +46,10 @@ parse c = case c of
     'M' -> Just M
     _ -> Nothing
 
+(>) :: (a -> b) -> (b -> c) -> a -> c
+(>) f g = g.f
+
 main :: IO()
 main = do
-    let execute = foldl (.) id $ map run $ map parse "LMRMM"
+    let execute = foldr (Main.>) id $ map run $ map parse "MLMRMLMRM"
     putStrLn $ show $ execute $ MarsRover (0, 0) S
