@@ -13,7 +13,8 @@ getPosition :: MarsRover -> Point
 getPosition (MarsRover point _) = point
 
 type Log = [Point]
-newtype Logger a =  Logger { execLogger :: (a, Log) }
+
+newtype Logger a =  Logger (a, Log)
     deriving (Show)
 
 instance Monad Logger where
@@ -23,8 +24,8 @@ instance Monad Logger where
                   (b, y) = execLogger n
               in Logger (b, x ++ y)
 
-logger :: MarsRover -> Logger MarsRover
-logger rover = return rover
+execLogger :: Logger a -> (a, Log)
+execLogger (Logger (a, log)) = (a, log)
 
 record :: MarsRover -> Logger MarsRover
 record marsRover = Logger (marsRover, [point])
@@ -35,7 +36,7 @@ run command rover =
     case command of
         Just L -> return $ turnLeft rover
         Just R -> return $ turnRight rover
-        Just M -> record rover >>= move'
+        Just M -> (move' rover) >>= record
         Nothing -> return rover
     where move' rover = return (move rover)
 
@@ -76,9 +77,7 @@ apply rover actions = case actions of
 
 main :: IO()
 main = do
-    let loggableRover = logger $ MarsRover (0, 0) S
+    let rover = MarsRover (0, 0) S
     let actions = map run $ map parse "MLMRMLMRM"
-    let result = apply loggableRover actions
-    let (rover, log) = execLogger result
-    putStrLn $ show rover
-    putStrLn $ show log
+    let result = apply (record rover) actions
+    putStrLn $ show result
