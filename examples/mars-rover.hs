@@ -4,17 +4,40 @@ data Direction = N | E | S | W
 data Command = L | R | M
     deriving (Show)
 
-type Point = (Int, Int)
+type Point = (Int, Int) 
+
 data MarsRover = MarsRover Point Direction
     deriving (Show)
 
-run :: Maybe Command -> MarsRover -> MarsRover
+getPosition :: MarsRover -> Point
+getPosition (MarsRover point _) = point
+
+type Log = [Point]
+newtype Logger a =  Logger { execLogger :: (a, Log) }
+    deriving (Show)
+
+instance Monad Logger where
+    return a = Logger (a, [])
+    m >>= k = let (a, x) = execLogger m
+                  n     = k a
+                  (b, y) = execLogger n
+              in Logger (b, x ++ y)
+
+logger :: MarsRover -> Logger MarsRover
+logger rover = return rover
+
+record :: MarsRover -> Logger MarsRover
+record marsRover = Logger (marsRover, [point])
+    where point = getPosition marsRover
+    
+run :: Maybe Command -> MarsRover -> Logger MarsRover
 run command rover =
     case command of
-        Just L -> turnLeft rover
-        Just R -> turnRight rover
-        Just M -> move rover
-        Nothing -> rover
+        Just L -> return $ turnLeft rover
+        Just R -> return $ turnRight rover
+        Just M -> record rover >>= move'
+        Nothing -> return rover
+    where move' rover = return (move rover)
 
 turnLeft :: MarsRover -> MarsRover
 turnLeft rover = case rover of
@@ -46,10 +69,16 @@ parse c = case c of
     'M' -> Just M
     _ -> Nothing
 
-(>) :: (a -> b) -> (b -> c) -> a -> c
-(>) f g = g.f
+apply :: Logger MarsRover -> [MarsRover -> Logger MarsRover] -> Logger MarsRover
+apply rover actions = case actions of
+    [] ->  rover
+    (x:xs) -> apply (rover >>= x) xs
 
 main :: IO()
 main = do
-    let execute = foldr (Main.>) id $ map run $ map parse "MLMRMLMRM"
-    putStrLn $ show $ execute $ MarsRover (0, 0) S
+    let loggableRover = logger $ MarsRover (0, 0) S
+    let actions = map run $ map parse "MLMRMLMRM"
+    let result = apply loggableRover actions
+    let (rover, log) = execLogger result
+    putStrLn $ show rover
+    putStrLn $ show log
